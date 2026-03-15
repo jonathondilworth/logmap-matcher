@@ -2095,12 +2095,24 @@ public class CandidateMappingManager extends MappingManager {
 		
 		if (OracleManager.isActive()){
 		
-			if (OracleManager.isMappingValid(
-					index.getIRIStr4ObjPropIndex(ident1),
-					index.getIRIStr4ObjPropIndex(ident2))){
-		
+            // J.D. possible bug where we call getIRIStr4ObjPropIndex,
+            // rather than getIRIStr4IndividualIndex
+
+            // original:
+
+			// if (OracleManager.isMappingValid(
+			// 		index.getIRIStr4ObjPropIndex(ident1),
+			// 		index.getIRIStr4ObjPropIndex(ident2))){
+
+            // patch:
+
+            if (OracleManager.isMappingValid(
+                    index.getIRIStr4IndividualIndex(ident1), 
+                    index.getIRIStr4IndividualIndex(ident2)
+                )) {
+                    
 				addInstanceMapping(ident1, ident2, ambiguity);
-				
+
 			}
 		}
 		
