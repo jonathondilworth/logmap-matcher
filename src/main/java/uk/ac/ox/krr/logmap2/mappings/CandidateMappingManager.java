@@ -2134,7 +2134,17 @@ public class CandidateMappingManager extends MappingManager {
 		//0: ok, 1: disc1, 2: disc2, 3: incompatible
 		int type_output;
 		//int num=0;
-		
+
+		// J.D. Experimental (OAEI KG+Instance-level tracks)
+		final double EX_HIGH_ISUB_GATE_FOR_NO_TYPES = 0.98; // intentionally v.high (inst. labels similar on KG track)
+		final double EX_ISUB_GATE_WITH_TYPES = Parameters.min_isub_instances; // typically set to 0.80
+		final double EX_ISUB_FLOOR_FOR_M_ASK = 0.60; // below this, we discard (otherwise provide to M_ask)
+		boolean categories_incompatible;
+		boolean type_confirmation_present;
+		boolean partial_type_info_present;
+		boolean no_type_info_present;
+		// END: J.D. Experimental
+
 		int num_incompatible_instances =0;
 		
 		//EXACT IF
@@ -2159,51 +2169,55 @@ public class CandidateMappingManager extends MappingManager {
 					//required confidence and comp factor are the same...
 					required_confidence = instanceMappingAssessment.getConfidence4Compatibility(ident1, ident2);
 					compatibility_factor = instanceMappingAssessment.getCompatibilityFactor(ident1, ident2);
-					
-					
+
 					//TODO Categories, only for ambiguouss mappings
-					if (!instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2) && ambiguity){
-						required_confidence=3.0;
-					}
-					
-					
-					if (required_confidence>1.0){
-						//LogOutput.print("Incompatible individuals: " + if_entry + " " + ident1 + " " + ident2);
-						//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
-						//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
-						num_incompatible_instances++;
-						
-						type_output=3;//incomp
-						
-					}
-					else{
-						
-						//we extract isub
-						confidence = extractISUB4InstanceMapping(ident1, ident2);
-						
-						
-						
-	
-						if (confidence>=required_confidence){
-																		
-							addInstanceMapping(ident1, ident2, ambiguity);
-							//addSubInstanceMapping(ident2, ident1); we only add one side since we do not split instance mappings
-							
-							type_output=0;
-							
-													
-			    		}
-						else{ //Non hard discarded. As it involves intersection of IF-exact, confidence is typically high
-							type_output=1;//disc 1
-							
-							//TODO: ask user/oracle
-							considerAdditionalFeedbackForInstanceMapping(ident1, ident2, ambiguity);
-							
-							
-							//LogOutput.print("Not good individuals: " + if_entry + " " + ident1 + " " + ident2 + "  " + confidence + " " + required_confidence);
-							//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
-							//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
+					//if (!instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2) && ambiguity){
+					//	required_confidence=3.0;
+					//}
+
+					// J.D. Experimental Category Check (applied to ALL):
+					categories_incompatible = !instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2);
+
+					// J.D. Experimental Changes:
+
+					if (required_confidence > 1.0 || categories_incompatible) {
+						num_incompatible_instances ++;
+						type_output = 3; // incompatible
+						if (Parameters.output_instance_mapping_files) {
+							addOutputType4Indivual(ident1, ident2, type_output);
+							extractISUB4InstanceMapping(ident1, ident2);
+							addCompFactor4Indivual(ident1, ident2, compatibility_factor);
+							extractScope4InstanceMapping(ident1, ident2);
 						}
+						continue;
+					}
+
+					confidence = extractISUB4InstanceMapping(ident1, ident2);
+					type_confirmation_present = (compatibility_factor >= 0.9);
+					partial_type_info_present = (compatibility_factor >= 0.7 && compatibility_factor < 0.9);
+					no_type_info_present 	  = (compatibility_factor <= 0.5);
+
+					if (type_confirmation_present && confidence >= EX_ISUB_GATE_WITH_TYPES) {
+						// good lexical similarity && type agreement (register as high confidence match)
+						addInstanceMapping(ident1, ident2, ambiguity);
+						type_output = 0;
+					}
+					else if (no_type_info_present && confidence >= EX_HIGH_ISUB_GATE_FOR_NO_TYPES && !ambiguity) {
+						// no type agreement, but v.high lexical similarity + no ambiguity
+						// (register as high confidence match)
+						addInstanceMapping(ident1, ident2, ambiguity);
+						type_output = 0;
+					}
+					else if (confidence >= EX_ISUB_FLOOR_FOR_M_ASK) {
+						// neither of the above conditions have been met, i.e., we're uncertain.
+						// fallthrough to M_ask
+						type_output = 1;
+						considerAdditionalFeedbackForInstanceMapping(ident1, ident2, ambiguity);
+					}
+					else
+					{
+						// confidence is too low; therefore, discard.
+						type_output = 2;
 					}
 					
 					if (Parameters.output_instance_mapping_files){
@@ -2227,7 +2241,7 @@ public class CandidateMappingManager extends MappingManager {
 			}
 			
 		}//for if exact
-		
+
 		LogOutput.print("\nNUmber of Instance mappings exact IF: " + getInstanceMappings().keySet().size() + " - " + getSizeOfInstanceMappings());
 		//System.out.println("\nNUmber of Instance mappings exact IF: " + getInstanceMappings().keySet().size() + " - " + getSizeOfInstanceMappings());
 		
@@ -2235,8 +2249,8 @@ public class CandidateMappingManager extends MappingManager {
 		
 		if_exact_intersection4individuals.clear();
 		num_incompatible_instances=0;
-		
-		
+
+
 		//WEAK IF
 		LogOutput.print("Sife IF intersection weak: " + if_weak_intersection4individuals.size());
 		
@@ -2270,71 +2284,117 @@ public class CandidateMappingManager extends MappingManager {
 					//New candidate mapping
 					required_confidence = instanceMappingAssessment.getConfidence4Compatibility(ident1, ident2);
 					compatibility_factor = instanceMappingAssessment.getCompatibilityFactor(ident1, ident2);									
-					
-					if (ambiguity){
-					
-						required_confidence=3.0;
-						
-						//TODO Categories, only for ambiguouss mappings
-						if (instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2)){
-							
+
+					// J.D. Experimental: START
+					categories_incompatible = !instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2);
+
+					if (required_confidence > 1.0 || categories_incompatible) {
+						num_incompatible_instances ++;
+						type_output = 3; // incompatible
+						if (Parameters.output_instance_mapping_files) {
+							addOutputType4Indivual(ident1, ident2, type_output);
+							extractISUB4InstanceMapping(ident1, ident2);
+							addCompFactor4Indivual(ident1, ident2, compatibility_factor);
+							extractScope4InstanceMapping(ident1, ident2);
 						}
+						continue;
 					}
-					
-					
-					if (required_confidence>1.0){
-						//LogOutput.print("Incompatible individuals: " + if_entry + " " + ident1 + " " + ident2);
-						//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
-						//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
-						num_incompatible_instances++;
-						
-						type_output=3;
-						
+
+					confidence = extractISUB4InstanceMapping(ident1, ident2);
+
+					type_confirmation_present = (compatibility_factor >= 0.9);
+					partial_type_info_present = (compatibility_factor >= 0.7 && compatibility_factor < 0.9);
+					no_type_info_present 	  = (compatibility_factor <= 0.5);
+
+					if (type_confirmation_present && confidence >= EX_ISUB_GATE_WITH_TYPES) {
+						// good lexical similarity && type agreement (register as high confidence match)
+						addInstanceMapping(ident1, ident2, ambiguity);
+						type_output = 0;
 					}
-					
-					else {
-						//we extract isub
-						confidence = extractISUB4InstanceMapping(ident1, ident2);									
-						
-						if (confidence>=required_confidence){
-																		
-							addInstanceMapping(ident1, ident2, ambiguity);
-							//addSubInstanceMapping(ident2, ident1); we only add one side
-							
-							type_output=0;
-							
-							//TODO add questions here too?
-							//Depending on Precision and Recall.
-													
-			    		}
-						else{
-							//TODO Adjust this for number for questions
-							if (confidence>0.65){
-								//LogOutput.print("Not good individuals: " + if_entry + " " + ident1 + " " + ident2 + "  " + confidence + " " + required_confidence);
-								//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
-								//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
-								//LogOutput.print("\t Types 1: " +index.getIndividualClassTypes4Identifier(ident1));
-								//for (int id : index.getIndividualClassTypes4Identifier(ident1)){
-								//	LogOutput.printAlways("\t\t"+ index.getName4ConceptIndex(id));
-								//}
-								//LogOutput.print("\t Types 2: " +index.getIndividualClassTypes4Identifier(ident2));
-								//for (int id : index.getIndividualClassTypes4Identifier(ident2)){
-								//	LogOutput.printAlways("\t\t"+ index.getName4ConceptIndex(id));
-								//}
-								type_output=1;
-								
-								//Extended questions with confidence > 0.65
-								//Non Extended confidence > 0.8
-								if (confidence>0.80 || OracleManager.keepExtendedQuestions())
-									//TODO: ask user/oracle
-									considerAdditionalFeedbackForInstanceMapping(ident1, ident2, ambiguity);
-								
-							}
-							else{
-								type_output=2;
-							}
-						}
+					else if (no_type_info_present && confidence >= EX_HIGH_ISUB_GATE_FOR_NO_TYPES && !ambiguity || OracleManager.keepExtendedQuestions()) {
+						// no type agreement, but v.high lexical similarity + no ambiguity
+						// (register as high confidence match OR drop into the set of extended questions for M_ask)
+						addInstanceMapping(ident1, ident2, ambiguity);
+						type_output = 0;
 					}
+					else if (confidence >= EX_ISUB_FLOOR_FOR_M_ASK) {
+						// neither of the above conditions have been met, i.e., we're uncertain.
+						// fallthrough to M_ask
+						type_output = 1;
+						considerAdditionalFeedbackForInstanceMapping(ident1, ident2, ambiguity);
+					}
+					else
+					{
+						// confidence is too low; therefore, discard.
+						type_output = 2;
+					}
+
+//
+//
+//					if (ambiguity){
+//
+//						required_confidence=3.0;
+//
+//						//TODO Categories, only for ambiguouss mappings
+//						if (instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2)){
+//
+//						}
+//					}
+//
+//
+//					if (required_confidence>1.0){
+//						//LogOutput.print("Incompatible individuals: " + if_entry + " " + ident1 + " " + ident2);
+//						//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
+//						//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
+//						num_incompatible_instances++;
+//
+//						type_output=3;
+//
+//					}
+//
+//					else {
+//						//we extract isub
+//						confidence = extractISUB4InstanceMapping(ident1, ident2);
+//
+//						if (confidence>=required_confidence){
+//
+//							addInstanceMapping(ident1, ident2, ambiguity);
+//							//addSubInstanceMapping(ident2, ident1); we only add one side
+//
+//							type_output=0;
+//
+//							//TODO add questions here too?
+//							//Depending on Precision and Recall.
+//
+//			    		}
+//						else{
+//							//TODO Adjust this for number for questions
+//							if (confidence>0.65){
+//								//LogOutput.print("Not good individuals: " + if_entry + " " + ident1 + " " + ident2 + "  " + confidence + " " + required_confidence);
+//								//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
+//								//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
+//								//LogOutput.print("\t Types 1: " +index.getIndividualClassTypes4Identifier(ident1));
+//								//for (int id : index.getIndividualClassTypes4Identifier(ident1)){
+//								//	LogOutput.printAlways("\t\t"+ index.getName4ConceptIndex(id));
+//								//}
+//								//LogOutput.print("\t Types 2: " +index.getIndividualClassTypes4Identifier(ident2));
+//								//for (int id : index.getIndividualClassTypes4Identifier(ident2)){
+//								//	LogOutput.printAlways("\t\t"+ index.getName4ConceptIndex(id));
+//								//}
+//								type_output=1;
+//
+//								//Extended questions with confidence > 0.65
+//								//Non Extended confidence > 0.8
+//								if (confidence>0.80 || OracleManager.keepExtendedQuestions())
+//									//TODO: ask user/oracle
+//									considerAdditionalFeedbackForInstanceMapping(ident1, ident2, ambiguity);
+//
+//							}
+//							else{
+//								type_output=2;
+//							}
+//						}
+//					}
 					
 					if (Parameters.output_instance_mapping_files){
 						
@@ -2351,7 +2411,7 @@ public class CandidateMappingManager extends MappingManager {
 						
 					}
 					
-					
+					// J.D. EXPERIMENTAL: END.
 					
 				}
 				
@@ -2365,7 +2425,7 @@ public class CandidateMappingManager extends MappingManager {
 		
 		
 		if_weak_intersection4individuals.clear();
-		
+
 		
 		
 		//WEAK IF role assertions
@@ -2403,7 +2463,7 @@ public class CandidateMappingManager extends MappingManager {
 					if (isIndividualAlreadyMapped(ident2)){
 						continue;
 					}
-					
+
 					//New candidate mapping
 					//System.out.println("NEW!! Size IFs: "+ onto_process1.getInvertedFileRoleAssertions().get(if_entry).size()+ " - "+ onto_process2.getInvertedFileRoleAssertions().get(if_entry).size());
 					
@@ -2411,45 +2471,91 @@ public class CandidateMappingManager extends MappingManager {
 					compatibility_factor = instanceMappingAssessment.getCompatibilityFactor(ident1, ident2);
 					
 					//TODO Categories
-					if (!instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2)){
-						required_confidence=3.0;
+					//if (!instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2)){
+					//	required_confidence=3.0;
+					//}
+
+					// J.D. Experimental: START
+					categories_incompatible = !instanceMappingAssessment.haveInstancesCompatibleCategories(ident1, ident2);
+
+					if (required_confidence > 1.0 || categories_incompatible) {
+						num_incompatible_instances ++;
+						type_output = 3; // incompatible
+						if (Parameters.output_instance_mapping_files) {
+							addOutputType4Indivual(ident1, ident2, type_output);
+							extractISUB4InstanceMapping(ident1, ident2);
+							addCompFactor4Indivual(ident1, ident2, compatibility_factor);
+							extractScope4InstanceMapping(ident1, ident2);
+						}
+						continue;
 					}
-					
-					
-					if (required_confidence>1.0){
-						//LogOutput.print("Incompatible individuals: " + if_entry + " " + ident1 + " " + ident2);
-						//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
-						//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
-						num_incompatible_instances++;
-						type_output = 3;
-						
-					}
-					else {
-						//we extract isub
-						confidence = extractISUB4InstanceMapping(ident1, ident2);									
-						
-						//we do not discard by confidence since if is probably low
-						addInstanceMapping(ident1, ident2, true); //check always
-						
+
+					confidence = extractISUB4InstanceMapping(ident1, ident2);
+
+					type_confirmation_present = (compatibility_factor >= 0.9);
+
+					if (type_confirmation_present && confidence >= EX_ISUB_GATE_WITH_TYPES) {
+						addInstanceMapping(ident1, ident2, true);
 						type_output = 0;
 					}
-					
-					
-					
-					if (Parameters.output_instance_mapping_files){
-						
+					else if (confidence >= EX_ISUB_FLOOR_FOR_M_ASK) {
+						type_output = 1;
+						considerAdditionalFeedbackForInstanceMapping(ident1, ident2, true);
+					}
+					else
+					{
+						type_output = 2;
+						if (!instanceMappings1N_ambiguity.containsKey(ident1)) {
+							instanceMappings1N_ambiguity.put(ident1, new HashSet<Integer>());
+						}
+						instanceMappings1N_ambiguity.get(ident1).add(ident2);
+					}
+
+					if (Parameters.output_instance_mapping_files) {
 						addOutputType4Indivual(ident1, ident2, type_output);
-						
-						//EXTRACT ISB IF not yet
 						extractISUB4InstanceMapping(ident1, ident2);
-						
-						//add comp factor
-						addCompFactor4Indivual(ident1,  ident2, compatibility_factor);
-						
-						//Extract scope
+						addCompFactor4Indivual(ident1, ident2, compatibility_factor);
 						extractScope4InstanceMapping(ident1, ident2);
 					}
-					
+
+					// J.D. Experimental: END
+
+//
+//
+//					if (required_confidence>1.0){
+//						//LogOutput.print("Incompatible individuals: " + if_entry + " " + ident1 + " " + ident2);
+//						//LogOutput.print("\t" +index.getName4IndividualIndex(ident1) + " " + index.getAlternativeLabels4IndividualIndex(ident1));
+//						//LogOutput.print("\t" +index.getName4IndividualIndex(ident2) + " " + index.getAlternativeLabels4IndividualIndex(ident2));
+//						num_incompatible_instances++;
+//						type_output = 3;
+//
+//					}
+//					else {
+//						//we extract isub
+//						confidence = extractISUB4InstanceMapping(ident1, ident2);
+//
+//						//we do not discard by confidence since if is probably low
+//						addInstanceMapping(ident1, ident2, true); //check always
+//
+//						type_output = 0;
+//					}
+//
+//
+//
+//					if (Parameters.output_instance_mapping_files){
+//
+//						addOutputType4Indivual(ident1, ident2, type_output);
+//
+//						//EXTRACT ISB IF not yet
+//						extractISUB4InstanceMapping(ident1, ident2);
+//
+//						//add comp factor
+//						addCompFactor4Indivual(ident1,  ident2, compatibility_factor);
+//
+//						//Extract scope
+//						extractScope4InstanceMapping(ident1, ident2);
+//					}
+//
 					
 				}
 				
