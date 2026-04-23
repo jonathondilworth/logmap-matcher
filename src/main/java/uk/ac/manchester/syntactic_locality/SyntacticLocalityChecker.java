@@ -1110,7 +1110,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	
 	    	//Only for dual
 			if (dualRoles && isNegativeOWLClassExpression(desc.getFiller()) 
-					&& !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+					&& !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 				isNegativeDescription=true;
 			
 			//Bottom is always false
@@ -1153,7 +1153,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	if (isNegativeOWLClassExpression(desc.getFiller()))
 	    		isNegativeDescription=true;
 	    	//Only bottom
-	    	else if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    	else if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 	    		isNegativeDescription=true;
 	    	else
 	    		isNegativeDescription=false;
@@ -1183,7 +1183,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    public void visit(OWLObjectHasSelf desc) {
 	    	//Only bottom
 	    	//For dual: if prop are not in signature --> Top
-	    	if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    	if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 	    		isNegativeDescription = true;
 	    	else
 	    		isNegativeDescription = false;
@@ -1201,7 +1201,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	//Changed by Ana
 	    	//if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()) &&
 	    	//		!foreignSignature.contains(desc.getValue()))
-	    	if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    	if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 	    		isNegativeDescription = true;
 	    	else
 	    		isNegativeDescription = false;
@@ -1234,7 +1234,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 		    	if (isNegativeOWLClassExpression(desc.getFiller()))
 		    		isNegativeDescription=true;
 		    	//Only bottom
-		    	else if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+		    	else if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 		    		isNegativeDescription=true;
 		    	else
 		    		isNegativeDescription=false;
@@ -1242,7 +1242,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	
 	    	//Non qualified cardinalities
 	    	else {
-	    		if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    		if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 		    		isNegativeDescription=true;
 		    	else
 		    		isNegativeDescription=false;
@@ -1277,7 +1277,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	if (desc.isQualified()) {
 	    		//Only for dual
 				if (dualRoles && isNegativeOWLClassExpression(desc.getFiller()) 
-						&& !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+						&& !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 					isNegativeDescription=true;
 				
 				//Bottom is always false
@@ -1288,7 +1288,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	}
 	    	else {
 	    		
-	    		if (dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    		if (dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 					isNegativeDescription=true;
 				
 				//Bottom is always false
@@ -1326,14 +1326,14 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    		
 	    		//Both duaRoles and nonDual 
 				if (isNegativeOWLClassExpression(desc.getFiller()) && 
-						!foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+						!foreignSignature.contains(desc.getProperty().getNamedProperty()))
 					isNegativeDescription=true;
 				
 				else
 					isNegativeDescription=false;
 	    	}
 	    	else {
-	    		if (!foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    		if (!foreignSignature.contains(desc.getProperty().getNamedProperty()))
 					isNegativeDescription=true;
 				
 				else
@@ -1483,19 +1483,22 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 
 	    
 
-
-	    public void visit(OWLObjectAllValuesFrom desc) {
-	    	
-	    	//All
+		/**
+		 * JD. else if branch now chains `.getNamedProperty()` to `desc.getProperty()`.
+		 * This is performed in place of `.asOWLObjectProperty()`, which requires
+		 * an explicit `.isAnonymous()` check, since it the return value can be either `inv(p)` or `p`.
+		 * See:
+		 * https://owlcs.github.io/owlapi/apidocs_4/org/semanticweb/owlapi/model/OWLObjectPropertyExpression.html#asOWLObjectProperty--
+		 * https://owlcs.github.io/owlapi/apidocs_5/org/semanticweb/owlapi/model/OWLObjectProperty.html#getNamedProperty--
+		 */
+		public void visit(OWLObjectAllValuesFrom desc) {
 			if (isPositiveOWLClassExpression(desc.getFiller()))
 				isPositiveDescription = true;
-			//Only for bottom roles
-			else if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+			else if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 				isPositiveDescription = true;
 			else
 				isPositiveDescription = false;
-	    	
-	    }
+		}
 	    
 	    
 	    public void visit(OWLDataAllValuesFrom desc) {
@@ -1514,7 +1517,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    
 	    public void visit(OWLObjectSomeValuesFrom desc) {
 	    	
-	    	if (dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty())
+	    	if (dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty())
 	    			&& isPositiveOWLClassExpression(desc.getFiller()))
 	    		isPositiveDescription = true;
 	    	else
@@ -1545,7 +1548,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    public void visit(OWLObjectHasValue desc) {
 	    	//Only dual
 	    	//For dual: if prop are not in signature --> Top
-	    	if (dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()) &&
+	    	if (dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()) &&
 	    			!foreignSignature.contains(desc.getValue()))
 	    		isPositiveDescription = true;
 	    	else
@@ -1574,14 +1577,14 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    public void visit(OWLObjectMinCardinality desc) {
 	    	
 	    	if (desc.isQualified()){
-		    	if (dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()) 
+		    	if (dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()) 
 		    		&& isPositiveOWLClassExpression(desc.getFiller()))
 		    		isPositiveDescription = true;
 		    	else
 		    		isPositiveDescription = false;
 	    	}
 	    	else {
-	    		if (dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    		if (dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 			    	isPositiveDescription = true;
 			    else
 			    	isPositiveDescription = false;
@@ -1606,7 +1609,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 			if (isPositiveOWLClassExpression(desc.getFiller()))
 				isPositiveDescription = true;
 			//Only for bottom roles
-			else if (!dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+			else if (!dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 				isPositiveDescription = true;
 			else
 				isPositiveDescription = false;
@@ -1647,7 +1650,7 @@ public class SyntacticLocalityChecker implements OWLAxiomVisitor {
 	    	    				
 	    	}
 	    	else {
-	    		if (dualRoles && !foreignSignature.contains(desc.getProperty().asOWLObjectProperty()))
+	    		if (dualRoles && !foreignSignature.contains(desc.getProperty().getNamedProperty()))
 			    	isPositiveDescription = true;
 			    else
 			    	isPositiveDescription = false;
