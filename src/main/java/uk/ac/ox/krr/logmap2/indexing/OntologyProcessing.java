@@ -428,9 +428,24 @@ public class OntologyProcessing {
 		
 		//OBJECT PROPERTIES
 		processLexiconObjectProperties(extractLabels);
-		
-		
-		
+
+
+
+		/**
+		 * J.D: START EXPERIMENTAL
+		 */
+
+		// JD. DETECT UNDECLARED ABOX PREDICATES (4KGs)
+		if (Parameters.index_undeclared_abox_predicates_for_annotation_matching){
+			processLexiconForAnnotationProxiedPropertyMatching();
+		}
+
+		/**
+		 * J.D: END EXPERIMENTAL
+		 */
+
+
+
 		//INDIVIDUALS
 		if (Parameters.perform_instance_matching){
 			processNamedIndividuals(extractLabels);
@@ -1088,8 +1103,107 @@ public class OntologyProcessing {
 		}
 		
 	}
-	
-	
+
+
+	/**
+	 * JD. Experimental (Start)
+	 */
+
+	/**
+	 * The current implementation targets OAEI KG Track 2025
+	 * TODO: consider changes for general usage:
+	 *   for instance, we would want to distinguish between object and data properties (LATER)
+	 */
+
+	/**
+	 * TODO: comments
+	 */
+	private void processLexiconForAnnotationProxiedPropertyMatching() {
+		// JD. note that the `annotation_property_uri_pattern` is set to "/property/" by default
+		processLexiconForAnnotationProxiedPropertyMatching(Parameters.annotation_property_uri_pattern);
+	}
+
+	/**
+	 * TODO: comments
+	 * @param uriPattern
+	 */
+	private void processLexiconForAnnotationProxiedPropertyMatching(String uriPattern){
+
+		List<String> cleanWords;  // preparing index string
+		String label;	  // pre-processed instance of the name string (which is an entity label derived from its URI)
+		int ident;		  // identifier returned by the inverted index (I think this can match on combinations of attributes, I'm not sure -- clever!)
+		String ns_ent;	  // entity namespace
+		String name;	  // entity name (i.e., returned by getEntityLabelFromURI(<URI>)
+		int count = 0;	  // running count for all cases that reach the index phase
+		String propUri;	  // annotation property URI (may or may not contain /property/) -- to pass guards, should match string specified in parameters.txt
+
+		// ANNOTATION PROPERTIES
+		for (OWLAnnotationProperty annProp : onto.getAnnotationPropertiesInSignature(Imports.INCLUDED)) {
+
+			propUri = annProp.getIRI().toString();
+
+			if (!propUri.contains(uriPattern)) {
+				continue; // no match
+			}
+
+			name = Utilities.getEntityLabelFromURI(propUri);
+
+			if (objectPropName2Identifier.containsKey(name)) {
+				continue; // duplicate index
+			}
+
+			// JD. this is a little hacky, we simply add declared predicates as data properties
+			// TODO: explicitly check what it maps from and to (i.e., data or object?), then index accordingly
+			ns_ent = Utilities.getNameSpaceFromURI(propUri);
+			ident = index.addNewObjectPropertyEntry(propUri);
+			index.setOntologyId4ObjectProp(ident, id_onto);
+			index.setObjectPropName(ident, name);
+			objectPropName2Identifier.put(name, ident);
+
+			// note: this is required for correct URI reconstruction when calling getIRIStr4ObjPropIndex
+			if (!ns_ent.equals("") && !ns_ent.equals(iri_onto)) {
+				index.setObjectPropNamespace(ident, ns_ent);
+			}
+
+			/**
+			 *  Label Preprocessing (preperation for indexing via inverted index):
+			 *  -
+			 *     1. remove punkt (naively)
+			 *     2. Branch for 'tokenisation' according to:
+			 *     		2.1. (snake case) split on '_'
+			 *     		2.2. (normal text) split on ' '
+			 *     		2.3. (camelCase) split by captial
+			 *     3. convert each word to lower case
+			 *     4. remove stopwords
+			 */
+			cleanWords = processLabel(name);
+			if (!cleanWords.isEmpty()) {
+				invertedFileExactObjProp.put(new HashSet<String>(cleanWords), ident);
+			}
+
+			label = ""; // reconstructs a single string
+			for (String word : cleanWords) {
+				label = label + word;
+			}
+			index.setObjectPropLabel(ident, label);
+			index.addAlternativeObjectPropertyLabel(ident, label);
+
+			count ++; // keep track of how many we've indexed with this approach
+
+		} // end: for
+
+		LogOutput.printAlways("NUMBER OF ANNOTATION-PROXIED (OBJ||DATA) PROPERTIES (registered as obj props in index): " + count);
+
+	} // end: processLexiconForAnnotationProxiedPropertyMatching
+
+
+	/**
+	 * JD. Experimental (END)
+	 */
+
+
+
+
 	private void processNamedIndividuals(){
 		processNamedIndividuals(true);
 	}
@@ -1098,7 +1212,7 @@ public class OntologyProcessing {
 		
 		Set<String> cleanWords = new HashSet<String>();
 		List<String> cleanWordsList;
-		
+
 		String label;
 		
 		int ident;
@@ -1595,8 +1709,8 @@ public class OntologyProcessing {
 				cleanWords.add(words[i]);
 			}			
 		}		
-		
-		
+
+
 		
 		
 		

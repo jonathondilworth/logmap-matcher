@@ -151,3 +151,114 @@ filter_entity|http://www.w3.org/1999/02/22-rdf-syntax-ns
 filter_entity|http://purl.org/dc/elements/
 filter_entity|http://mouse.owl#UNDEFINED_part_of
 filter_entity|http://human.owl#UNDEFINED_part_of
+
+##
+# JD. Experimental Parameters: index_undeclared_abox_predicates_for_annotation_matching
+# -------------------------------------------------------------------------------------
+#   when properties exist as undeclared ABox predicates with no co-responding TBox
+#   such as the OAEI KG track, we would like to extract, index, then match them
+#   the routine for handling this is placed within OntologyProcessing with the other
+#   lexicon processing routines - you can toggle it on/off according to the following param:
+##
+index_undeclared_abox_predicates_for_annotation_matching|true
+
+##
+# JD. Experimental Parameters: annotation_property_uri_pattern
+# ------------------------------------------------------------
+#   some KGs (like DBpedia) use a NS convention where property URIs contain /property/<prop>
+#   WARNING: this feature should be used cautiously and is not guaranteed to work on any KGs
+##
+annotation_property_uri_pattern|/property/
+
+
+
+##
+## [OPTIONAL PARAMS] -- see how these affect the performance on KG by including / not including them
+##
+
+# OAEI 2025 KG track: data assertion URIs
+
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/ontology/wikiPageWikiLinkText
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/marvel.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/birthName
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/alias
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/swg.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/alternateName
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/alias
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/label
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/fullName
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/nickname
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/marvel.wikia.com/property/name
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/swg.wikia.com/property/title
+data_assertion_URI_Indiv|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/birthname
+
+# OAEI 2025 KG track: category_URIs
+
+category_URI|http://purl.org/dc/terms/subject
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/era
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/class
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/occupation
+category_URI|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/occupation
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/class
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/occupation
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/nationality
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/class
+category_URI|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/starwars.wikia.com/property/genre
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/allegiance
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/occupation
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/classification
+category_URI|http://dbkwik.webdatacommons.org/swg.wikia.com/property/profession
+category_URI|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/swg.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/property/class
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/class
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/swg.wikia.com/property/species
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/classification
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/allegiance
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/subject
+category_URI|http://dbkwik.webdatacommons.org/swg.wikia.com/property/category
+category_URI|http://dbkwik.webdatacommons.org/marvel.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/marvelcinematicuniverse.wikia.com/property/type
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/genre
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/genre
+category_URI|http://dbkwik.webdatacommons.org/stexpanded.wikia.com/property/era
+category_URI|http://dbkwik.webdatacommons.org/swg.wikia.com/property/gender
+category_URI|http://dbkwik.webdatacommons.org/swg.wikia.com/property/affiliation
+category_URI|http://dbkwik.webdatacommons.org/memory-beta.wikia.com/property/affiliatioN
+category_URI|http://dbkwik.webdatacommons.org/swtor.wikia.com/property/era
+category_URI|http://dbkwik.webdatacommons.org/marvel.wikia.com/property/gender
+

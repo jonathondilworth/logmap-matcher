@@ -227,10 +227,21 @@ public class Parameters {
 	
 	//Some individuals contain links to dbpedia categories or other sort of categories which are very important for desambiguation
 	public static Set<String> accepted_property_URIs_for_instance_categories = new HashSet<String>();
-	
-	
-	
-	
+
+	/**
+	 * JD. Experimental (START)
+	 */
+
+	public static boolean index_undeclared_abox_predicates_for_annotation_matching = false;
+	private static final String index_undeclared_abox_predicates_for_annotation_matching_str = "index_undeclared_abox_predicates_for_annotation_matching";
+
+	public static String annotation_property_uri_pattern = "/property/";
+	private static final String getAnnotation_property_uri_pattern_str = "annotation_property_uri_pattern";
+
+	/**
+	 * JD. Experimental (END)
+	 */
+
 	//Some IM tracks require to match specific type of individuals: i.e. Persons
 	public static Set<String> allowed_instance_types = new HashSet<String>();
 	//The benchmark tracks does not consider in the output alignemnts
@@ -692,8 +703,22 @@ public class Parameters {
 				else if (elements[0].equals(use_stemming_str)){
 					use_stemming = Boolean.valueOf(elements[1]);
 				}
-				
-				
+
+				/**
+				 * JD. Experimental (START)
+				 */
+
+				else if (elements[0].equals(index_undeclared_abox_predicates_for_annotation_matching_str)){
+					index_undeclared_abox_predicates_for_annotation_matching = Boolean.valueOf(elements[1]);
+				}
+
+				else if (elements[0].equals(getAnnotation_property_uri_pattern_str)){
+					annotation_property_uri_pattern = elements[1];
+				}
+
+				/**
+				 * JD. Experimental (END)
+				 */
 				
 				
 				
