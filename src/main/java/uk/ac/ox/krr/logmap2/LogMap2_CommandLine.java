@@ -183,7 +183,13 @@ public class LogMap2_CommandLine {
 					satisfiability_check=Boolean.valueOf(args[7]);
 					
 				}
-				
+
+				/**
+				 * JD. Ensure that we don't just select default params
+				 * eg. use of multilinguial mode (which tries to load things that dont exist)
+				 */
+				System.out.println("Reading and loading parameters...");
+				Parameters.readParameters();
 				
 				
 				System.out.println("Loading ontologies...");
