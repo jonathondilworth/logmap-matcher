@@ -2752,6 +2752,8 @@ public class CandidateMappingManager extends MappingManager {
 				}
 			}
 			
+			// JD. 0.75 is the property anchor-creation floor.
+			// TODO: control this value via an input parameter.
 			if (maxconf>0.75){ //Input parameter
 				dataPropertyMappings.put(ident1, identmax);
 				dataPropertyMappings2confidence.put(ident1, maxconf);
@@ -2959,6 +2961,8 @@ public class CandidateMappingManager extends MappingManager {
 				}
 			}
 			
+			// JD. 0.75 is the property anchor-creation floor.
+			// TODO: control this value via an input parameter.
 			if (maxconf>0.75){
 				objPropertyMappings.put(ident1, identmax);
 				objPropertyMappings2confidence.put(ident1, maxconf);

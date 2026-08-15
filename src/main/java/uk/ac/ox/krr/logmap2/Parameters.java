@@ -199,14 +199,81 @@ public class Parameters {
 	public static int max_mediating_ontologies =10;
 	public static double confidence_composed_mappings1 = 0.8;
 	public static double confidence_composed_mappings2 = 0.7;
-	
-	
-	
+
+
+	/**
+	 * cleanD_G (run Dowling-Gallier algorithm for incoherence/unsatisfiable-class checking)
+	 * setting to false turns the repair procedure off:
+	 * false => nothing is diagnosed via Horn-SAT => nothing is discarded or weakened by logical repair
+	 */
 	public static boolean cleanD_G = true;
 	public static boolean extractGlobal_D_G_Info = true;
+
+	/**
+	 * JD.
+	 * Repair aggressiveness dials
+	 * Defaults preserve LogMap's original behaviour
+	 */
+
+	/**
+	 * strict_property_compatibility toggles the use of `arePropertiesCompatible` vs `arePropertiesCompatibleLight`
+	 * i.e., `strict_property_compatibility ? arePropertiesCompatible(...) : arePropertiesCompatibleLight(...)`
+	 * strict => a domain/range declared on one side but missing on the other -> incompatible -> unreachable required-confidence -> dropped
+	 */
+	// public static boolean strict_property_compatibility = false;
+
+	/**
+	 * Property domain/range compatibility mode: "strict" | "light" | "liberal"
+	 * strict adds the asymmetric-empty rule: a domain/range declared on one side but missing on the other -> incompatible -> unreachable required-confidence -> dropped
+	 * light provides the default configuration (described below)
+	 * liberal downgrades the 'different but-non-conflicting verdict from fatal to passable (0.90).
+	 * 
+	 * 
+	 */
+	// public static String property_compatibility = "light";
+	
+	/**
+	 * Property domain/range compatibility mode: "strict" | "light" | "liberal"
+	 */
+	public static String property_compatibility = "light";
+
+    /**
+     * setting to `false` relies on exact disjointness, i.e., walk up from both classes and check whether they land under opposite sides of a disjointness axiom.
+     * With setting to `true` (default), the test additionally walks the descendants of one class before applying the same check.
+     * This catches mappings whose acceptance would make a descendant class unsatisfiable.
+     * Used during property-mapping assessment (domain/range pairs), instance-mapping assessment (type pairs) and the second-chance re-admission filter.
+     * Note there is an even more aggressive variant, "arePartiallyDisjoint", which walks down from BOTH tested classes and tests the product space. 
+	 * It is commented out upstream ("too aggressive") and we do not include a dial for it.
+     */
+	public static boolean disjointness_includes_descendants = true;
+
+	/**
+	 * during the last iteration of repair, by default we unfix the near-exact matches (anchors) for one final sweep
+	 * i.e., `lastLogicalCleaning` -> `setExactAsFixed(false)` -- this ensures that the output mappings are 'as coherent as possible'
+	 * (according to the Horn propositional approximation for reasoning)
+	 * leaving `unfix_exact_in_last_cleaning` as `true` runs this step (thus, setting as true => default configuration)
+	 * setting to false keeps the anchors fixed (even during the last step)
+	 * TODO: modify behaviour to both fix and unfix during different iterations of repair.
+	 */
+	public static boolean unfix_exact_in_last_cleaning = true;
+
+	/**
+	 * the hard_case_conflicts_factor scales the 'give-up' thresholds tied to the repair-plan search
+	 * setting to 1.0 uses the default values (used in the original stock LogMap implementation)
+	 * reducing the factor means that classes with smaller conflict sets get declared hard earlier, 
+	 * leading to less repair/faster run-time (i.e., MORE AGGRESSIVE repair! where classes get declared hard earlier, so instead of searching 
+	 * for minimal plans, all of their conflictive mappings are deleted at once -> blunter repair, more removals, faster!
+	 * ... i.e., the search space is effectively reduced.
+	 * Whereas, increasing the factor scales the original thresholds up (having the opposite effect: more specific repair, less removals, slower!).
+	 */
+	public static double hard_case_conflicts_factor = 1.0;
+	
+	/**
+	 * JD. END OF DIALS.
+	 */
 	
 	
-	
+
 	public static String path_chinese_segmenter_dict = "/home/ernesto/Documents/OAEI_2014_campaign/EVAL_2014/logmap2_package_oaei2014/conf/multilingual/dict_ictclas4j";
 	
 	//To store the translations from google codes to be used in next iterations (useful in Multifarm track)
@@ -301,7 +368,11 @@ public class Parameters {
 	
 	private static final String second_chance_conflicts_str = "second_chance_conflicts";
 	private static final String ratio_second_chance_discarded_str = "ratio_second_chance_discarded";
-	
+
+	/**
+	 * JD. Toggle repair functionality via the `perform_repair` string in `Parameters.txt`
+	 */
+	private static final String perform_repair_str = "perform_repair";
 	
 	//reasoner|MORe or HermiT
 	private static final String reasoner_str = "reasoner";
@@ -615,6 +686,10 @@ public class Parameters {
 				
 				else if (elements[0].equals(ratio_second_chance_discarded_str)){
 					ratio_second_chance_discarded = Integer.valueOf(elements[1]);
+				}
+
+				else if (elements[0].equals(perform_repair_str)){
+					cleanD_G = Boolean.valueOf(elements[1]);
 				}
 				
 				else if (elements[0].equals(use_umls_lexicon_str)){

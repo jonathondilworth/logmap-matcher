@@ -1206,6 +1206,8 @@ public class AnchorAssessment {
 	 */
 	private boolean continueWithNextPlan(int entity, int size_plan){
 		
+		final double f = Parameters.hard_case_conflicts_factor;
+
 		if (size_plan>=dgSat.getConflictiveMappings().size()){
 			//No plan
 			
@@ -1226,10 +1228,10 @@ public class AnchorAssessment {
 			return false; //no_exit=false;
 		} 
 		
-		else if (!dealWithHardCases && ((dgSat.getConflictiveMappings().size()>40  && size_plan>=1) || 
-				(dgSat.getConflictiveMappings().size()>30 && size_plan>=2) ||
-				(dgSat.getConflictiveMappings().size()>20 && size_plan>=3) || 
-				(dgSat.getConflictiveMappings().size()>15 && size_plan>=4))){
+		else if (!dealWithHardCases && ((dgSat.getConflictiveMappings().size()>40*f  && size_plan>=1) ||
+				(dgSat.getConflictiveMappings().size()>30*f && size_plan>=2) ||
+				(dgSat.getConflictiveMappings().size()>20*f && size_plan>=3) ||
+				(dgSat.getConflictiveMappings().size()>15*f && size_plan>=4))){
 			//|| (dgSat.getConflictiveMappings().size()>10 && size_plan>=6)){
 		//hard case
 		//To avoid hard cases. they will be repaired later				
@@ -1246,10 +1248,10 @@ public class AnchorAssessment {
 		
 		} 
 		
-		else if (dealWithHardCases && ((dgSat.getConflictiveMappings().size()>40  && size_plan>=2) || 
-				(dgSat.getConflictiveMappings().size()>30 && size_plan>=3) ||
-				(dgSat.getConflictiveMappings().size()>25 && size_plan>=4) || 
-				(dgSat.getConflictiveMappings().size()>15 && size_plan>=5))){
+		else if (dealWithHardCases && ((dgSat.getConflictiveMappings().size()>40*f  && size_plan>=2) ||
+				(dgSat.getConflictiveMappings().size()>30*f && size_plan>=3) ||
+				(dgSat.getConflictiveMappings().size()>25*f && size_plan>=4) ||
+				(dgSat.getConflictiveMappings().size()>15*f && size_plan>=5))){
 			//hard case again
 			//classes_with_hard_cases.add(entity);  
 			

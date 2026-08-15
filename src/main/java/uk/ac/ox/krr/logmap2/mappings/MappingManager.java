@@ -2597,8 +2597,10 @@ public abstract class MappingManager {
 	
 	public boolean isMappingInConflictWithFixedMappings(int ident1, int ident2){
 		
-		//return isMappingInConflictWithFixedMappings_direct_disjointness(ident1, ident2);
-		return isMappingInConflictWithFixedMappings_includes_descendants(ident1, ident2);
+		if (Parameters.disjointness_includes_descendants)
+			return isMappingInConflictWithFixedMappings_includes_descendants(ident1, ident2);
+
+		return isMappingInConflictWithFixedMappings_direct_disjointness(ident1, ident2);
 		
 	}
 	

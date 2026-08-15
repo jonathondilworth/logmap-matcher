@@ -244,7 +244,17 @@ public class SatisfiabilityIntegration {
 	public int getNumUnsatClasses(){
 		return unsat;
 	}
+
 	
+	/**
+	 * Tells whether the reasoner completed the classification of the merged ontology.
+	 * If false (e.g. classification timed out), getNumUnsatClasses() returns 0 and
+	 * must not be interpreted as a coherent integration.
+	 */
+	public boolean isOntologyClassified(){
+		return reasonerAccess.isOntologyClassified();
+	}
+
 	
 	private void createMergedOntology(OWLOntology O1, OWLOntology O2, OWLOntology M) throws Exception{
 		Set<OWLAxiom> axioms = new HashSet<OWLAxiom>();

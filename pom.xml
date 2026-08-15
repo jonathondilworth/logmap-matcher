@@ -54,6 +54,12 @@
 	<artifactId>elk-owlapi</artifactId>
 	<version>0.4.3</version>
   </dependency>
+  <!-- JFact for OWL API 4: fallback coherence checker in ExperimentRunner -->
+  <dependency>
+	<groupId>net.sourceforge.owlapi</groupId>
+	<artifactId>jfact</artifactId>
+	<version>4.0.4</version>
+  </dependency>
   <!-- Not in maven central. One need to git clone ELK repo and mvn insall -->
   <!-- Requires a newer OWL API 4 version -->
   <!-- dependency>

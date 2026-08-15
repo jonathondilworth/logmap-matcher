@@ -42,9 +42,6 @@ import uk.ac.ox.krr.logmap2.interactive.*;
 import uk.ac.ox.krr.logmap2.interactive.objects.MappingObjectInteractivity;
 import uk.ac.ox.krr.logmap2.mappings.MappingManager;
 import uk.ac.ox.krr.logmap2.mappings.CandidateMappingManager;
-
-import uk.ac.ox.krr.logmap2.io.LogOutput;
-
 import uk.ac.ox.krr.logmap2.statistics.*;
 
 
@@ -692,14 +689,20 @@ public class LogMap2Core {
 					//System.out.println(dir_mapping);
 								
 					//TODO No need to reverse ids. Done in OWLAlignmentFormat
-					//if (dir_mapping!=Utilities.R2L){
+					/**
+					 * Ids must be reversed for R2L: OWLAlignmentFormat interprets the direction
+					 * relative to its argument order, while getDirClassMapping reports it
+					 * relative to the canonical (onto1, onto2) order. Same handling as in
+					 * LogMap_Full.getOWLOntology4Mappings and LogMap2_OAEI.
+					 */
+					if (dir_mapping!=Utilities.R2L){
 						owlformat.addClassMapping2Output(
 								getIRI4ConceptIdentifier(ide1),
 								getIRI4ConceptIdentifier(ide2),
 								dir_mapping,
 								getConfidence4ConceptMapping(ide1, ide2)
 								);
-					/*}
+					}
 					else{
 						owlformat.addClassMapping2Output(
 								getIRI4ConceptIdentifier(ide2),
@@ -707,7 +710,7 @@ public class LogMap2Core {
 								dir_mapping,
 								getConfidence4ConceptMapping(ide1, ide2)
 							);
-					}*/
+					}
 				}
 			}
 		}
@@ -1585,7 +1588,8 @@ public class LogMap2Core {
 			//Adds clean mappings to anchors. Conflictive and split mappings to respective sets
 			init = StatisticsTimeMappings.getCurrentTimeInMillis();
 		
-			mapping_extractor.setExactAsFixed(false);
+			if (Parameters.unfix_exact_in_last_cleaning)
+				mapping_extractor.setExactAsFixed(false);
 			mappings_assessment.CheckSatisfiabilityOfIntegration_DandG(mapping_extractor.getLogMapMappings());  ///No fixed mappings: we clean everything just in case
 			mapping_extractor.setExactAsFixed(true);
 			

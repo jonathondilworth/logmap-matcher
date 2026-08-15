@@ -26,21 +26,53 @@ import uk.ac.ox.krr.logmap2.mappings.MappingManager;
 
 /**
  * Manages the compatibility of object properties
+ * JD. see parent class for PropertyMappingAssessment modes (& Parameters.java)
  * 
  * @author Ernesto
- *
+ * Edits from JD. see `git log`.
  */
 public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<Integer> {
 
-	
+	/**
+	 * TODO: javadoc comment
+	 * @param index
+	 * @param mapping_manager
+	 */
 	public ObjectPropertyMappingAssessment(IndexManager index, MappingManager mapping_manager){
 		this.index = index;
 		this.mapping_manager = mapping_manager;
 	}
 	
 	
-	
+	/**
+	 * TODO: comment.
+	 */
+
 	protected int arePropertiesCompatible(int ident1, int ident2) {
+		return assessCompatibility(ident1, ident2, MODE_STRICT);
+	}
+
+	protected int arePropertiesCompatibleLight(int ident1, int ident2) {
+		return assessCompatibility(ident1, ident2, MODE_LIGHT);
+	}
+
+	protected int arePropertiesLiberallyCompatible(int ident1, int ident2) {
+		return assessCompatibility(ident1, ident2, MODE_LIBERAL);
+	}
+
+	protected int arePropertiesCompatiblePermissive(int ident1, int ident2) {
+		return assessCompatibility(ident1, ident2, MODE_PERMISSIVE);
+	}
+	
+
+	/**
+	 * TODO: javadoc comment
+	 * @param ident1
+	 * @param ident2
+	 * @param mode
+	 * @return
+	 */
+	private int assessCompatibility(int ident1, int ident2, int mode) {
 
 		Set<Integer> domain1=index.getDomainObjProp4Identifier(ident1);
 		Set<Integer> mapped_domain1=new HashSet<Integer>();
@@ -55,20 +87,19 @@ public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<I
 		boolean same_range=false;
 		
 		if (domain1.isEmpty() && domain2.isEmpty() && range1.isEmpty() && range2.isEmpty())
-			return EMPTY_RANGE_OR_DOMAIN;
+			return (mode==MODE_PERMISSIVE) ? PERMIT : EMPTY_RANGE_OR_DOMAIN;
 		
-		
-		//look for incompatibilities
-		if (
+		// look for incompatibilities
+		// JD. ONLY IN STRICT MODE: asymmetric declarations count as an incompatibility
+		if (mode==MODE_STRICT && (
 				(domain1.isEmpty() && !domain2.isEmpty()) || 
 				(range1.isEmpty() && !range2.isEmpty()) ||
 				(!domain1.isEmpty() && domain2.isEmpty()) || 
 				(!range1.isEmpty() && range2.isEmpty())				
-		){
+		)){
 			return INCOMPATIBLE_RANGE_OR_DOMAIN; //we do not risk
 		}
 		
-
 		//If domain or ranges are equivalent to Top 
 		for (int ide1 : domain1){
 			if (index.getDangerousClasses().contains(ide1))
@@ -89,13 +120,6 @@ public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<I
 				return INCOMPATIBLE_RANGE_OR_DOMAIN;
 		}
 		
-		
-		
-		
-		
-		
-		
-		
 		//One side may still be empty	
 		if (!domain1.isEmpty() && !domain2.isEmpty()){
 			//Find mappings		
@@ -115,10 +139,8 @@ public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<I
 			}
 		}
 		
-		
 		same_domain=haveSameDomain(mapped_domain1, domain2);
 		same_range=haveSameRange(mapped_range1, range2);
-		
 		
 		//Same sets in one of teh sides at least
 		if (same_domain && same_range){
@@ -136,7 +158,9 @@ public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<I
 				}
 			}
 			
-			return ONLY_SAME_RANGE_OR_DOMAIN; //one side empty or compatible
+			return (mode==MODE_PERMISSIVE) ? PERMIT : ONLY_SAME_RANGE_OR_DOMAIN;
+
+			// return ONLY_SAME_RANGE_OR_DOMAIN; //one side empty or compatible
 			//Too dangerous Not in principle
 			//return INCOMPATIBLE_RANGE_OR_DOMAIN;
 			
@@ -153,7 +177,9 @@ public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<I
 				}
 			}
 			
-			return ONLY_SAME_RANGE_OR_DOMAIN;	//one side empty or compatible
+			return (mode==MODE_PERMISSIVE) ? PERMIT : ONLY_SAME_RANGE_OR_DOMAIN;
+
+			// return ONLY_SAME_RANGE_OR_DOMAIN;	//one side empty or compatible
 			//Too dangerous? Not in principle
 			//return INCOMPATIBLE_RANGE_OR_DOMAIN;
 			
@@ -184,175 +210,20 @@ public class ObjectPropertyMappingAssessment extends PropertyMappingAssessment<I
 			//return COMPATIBLE_RANGE_DOMAIN;
 			//Too dangerous (always)
 			//Different but compatible
+			// return PROBABLY_INCOMPATIBLE_RANGE_OR_DOMAIN;
+
+			if (mode==MODE_LIBERAL)
+				return COMPATIBLE_RANGE_DOMAIN;
+			if (mode==MODE_PERMISSIVE)
+				return PERMIT;
 			return PROBABLY_INCOMPATIBLE_RANGE_OR_DOMAIN;
 			
 		}
 		
-
-		
-		
 	}
 	
-	/**
-	 * Less aggressive method
-	 * @param ident1
-	 * @param ident2
-	 * @return
-	 */
-	protected int arePropertiesCompatibleLight(int ident1, int ident2) {
 
-		Set<Integer> domain1=index.getDomainObjProp4Identifier(ident1);
-		Set<Integer> mapped_domain1=new HashSet<Integer>();
-		Set<Integer> domain2=index.getDomainObjProp4Identifier(ident2);
-		
-		
-		Set<Integer> range1=index.getRangeObjProp4Identifier(ident1);
-		Set<Integer> mapped_range1=new HashSet<Integer>();
-		Set<Integer> range2=index.getRangeObjProp4Identifier(ident2);
-		
-		boolean same_domain=false;
-		boolean same_range=false;
-		
-		if (domain1.isEmpty() && domain2.isEmpty() && range1.isEmpty() && range2.isEmpty())
-			return EMPTY_RANGE_OR_DOMAIN;
-		
-		
-		//look for incompatibilities -> Too aggressive in some cases
-		/*if (
-				(domain1.isEmpty() && !domain2.isEmpty()) || 
-				(range1.isEmpty() && !range2.isEmpty()) ||
-				(!domain1.isEmpty() && domain2.isEmpty()) || 
-				(!range1.isEmpty() && range2.isEmpty())				
-		){
-			return EMPTY_RANGE_OR_DOMAIN; //we do not risk
-		}*/
-		
 
-		//If domain or ranges are equivalent to Top 
-		for (int ide1 : domain1){
-			if (index.getDangerousClasses().contains(ide1))
-				return INCOMPATIBLE_RANGE_OR_DOMAIN;
-		}
-		
-		for (int ide2 : domain2){
-			if (index.getDangerousClasses().contains(ide2)) 
-				return INCOMPATIBLE_RANGE_OR_DOMAIN;
-		}
-		for (int ide1 : range1){
-			if (index.getDangerousClasses().contains(ide1))
-				return INCOMPATIBLE_RANGE_OR_DOMAIN;
-		}
-		
-		for (int ide2 : range2){
-			if (index.getDangerousClasses().contains(ide2)) 
-				return INCOMPATIBLE_RANGE_OR_DOMAIN;
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		//One side may still be empty	
-		if (!domain1.isEmpty() && !domain2.isEmpty()){
-			//Find mappings		
-			for (int cls1 : domain1){
-				if (mapping_manager.getLogMapMappings().containsKey(cls1)){
-					mapped_domain1.addAll(mapping_manager.getLogMapMappings().get(cls1));
-				}
-			}
-		}
-		
-		if (!range1.isEmpty() && !range2.isEmpty()){
-			//Find mappings (only for object properties) 
-			for (int cls1 : range1){
-				if (mapping_manager.getLogMapMappings().containsKey(cls1)){
-					mapped_range1.addAll(mapping_manager.getLogMapMappings().get(cls1));
-				}
-			}
-		}
-		
-		
-		same_domain=haveSameDomain(mapped_domain1, domain2);
-		same_range=haveSameRange(mapped_range1, range2);
-		
-		
-		//Same sets in one of teh sides at least
-		if (same_domain && same_range){
-			return SAME_RANGE_AND_DOMAIN;
-		}
-		else if (same_domain){ //Same domain
-			
-			//All possible mappings must be compatible (i.e. same hierarchy)
-			for (int cls1 : range1){
-				for (int cls2 : range2){
-					if (mapping_manager.isMappingInConflictWithFixedMappings(cls1, cls2)){
-						return INCOMPATIBLE_RANGE_OR_DOMAIN;
-					}
-						
-				}
-			}
-			
-			return ONLY_SAME_RANGE_OR_DOMAIN; //one side empty or compatible
-			//Too dangerous Not in principle
-			//return INCOMPATIBLE_RANGE_OR_DOMAIN;
-			
-		}
-		else if (same_range){ //same range
-			
-			//All possible mappings must be compatible (i.e. same hierarchy)
-			for (int cls1 : domain1){
-				for (int cls2 : domain2){
-					if (mapping_manager.isMappingInConflictWithFixedMappings(cls1, cls2)){
-						return INCOMPATIBLE_RANGE_OR_DOMAIN;
-					}
-						
-				}
-			}
-			
-			return ONLY_SAME_RANGE_OR_DOMAIN;	//one side empty or compatible
-			//Too dangerous? Not in principle
-			//return INCOMPATIBLE_RANGE_OR_DOMAIN;
-			
-		}
-		else {  //both sides compatible??
-			
-			//All possible mappings must be compatible (i.e. same hierarchy)
-			for (int cls1 : domain1){
-				for (int cls2 : domain2){
-					if (mapping_manager.isMappingInConflictWithFixedMappings(cls1, cls2)){
-						return INCOMPATIBLE_RANGE_OR_DOMAIN;
-					}
-						
-				}
-			}
-			
-			//All possible mappings must be compatible (i.e. same hierarchy)
-			for (int cls1 : range1){
-				for (int cls2 : range2){
-					if (mapping_manager.isMappingInConflictWithFixedMappings(cls1, cls2)){
-						return INCOMPATIBLE_RANGE_OR_DOMAIN;
-					}
-						
-				}
-			}
-				
-			//Compatible ranges/domains
-			//return COMPATIBLE_RANGE_DOMAIN;
-			//Too dangerous (always)
-			//Different but compatible
-			return PROBABLY_INCOMPATIBLE_RANGE_OR_DOMAIN;
-			
-		}
-		
-
-		
-		
-	}
-	
-	
 	/*protected boolean haveSameRange(Set<Integer> range1, Set<Integer> range2){
 		
 		if (range1.size()>0 && range2.size()>0){			
