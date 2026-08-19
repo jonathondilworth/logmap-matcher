@@ -1,5 +1,7 @@
 package uk.ac.ox.krr.logmap2.indexing;
 
+import uk.ac.ox.krr.logmap2.repair.restrictions.RestrictionExtractor;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
@@ -60,6 +62,14 @@ public class OntologyProcessing {
 	
 	private OWLOntology onto;
 	
+	//Restriction-extraction experiment (HermiT-normalisation route): populated during
+	//setTaxonomicData, while onto is still alive; survives clearOntologyRelatedInfo()
+	private RestrictionExtractor restriction_extractor;
+
+	public RestrictionExtractor getRestrictionExtractor() {
+		return restriction_extractor;
+	}
+
 	private IndexManager index;
 	
 	/*Exact match entries*/
@@ -2621,6 +2631,14 @@ public class OntologyProcessing {
 		fin = Calendar.getInstance().getTimeInMillis();
 		LogOutput.print("Extracting General Axioms: " + (float)((double)fin-(double)init)/1000.0);
 		
+		//Restriction-extraction experiment: must run HERE (onto and the OWLAPI objects
+		//are nulled right after indexing). def# ids are offset per ontology so the fresh
+		//names introduced by the normaliser can never collide across the input pair.
+		if (RestrictionExtractor.ACTIVE){
+			restriction_extractor = RestrictionExtractor.extract(onto, (id_onto == 0) ? 1 : 100000);
+			restriction_extractor.printSummary("ontology " + id_onto);
+		}
+
 		
 
 		//Extract

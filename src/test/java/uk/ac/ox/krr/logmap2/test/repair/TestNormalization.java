@@ -24,7 +24,8 @@ public class TestNormalization {
 		OWLAxiomsAdapted axioms = new OWLAxiomsAdapted();
 		
 		
-		String onto_iri="file:/C:/Users/Ernes/Documents/test_norm.owl";
+//		String onto_iri="file:/C:/Users/Ernes/Documents/test_norm.owl";
+		String onto_iri="file:/t705data/extended_logmap_repair/examples/test_norm.owl";
 		
 		OntologyLoader loader;
 		try {

@@ -20,16 +20,20 @@ package org.semanticweb.HermiT.structural;
 import java.util.Collection;
 
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 
 public class OWLAxiomsAdapted extends OWLAxioms {
     
-    public OWLAxiomsAdapted() {
+   public OWLAxiomsAdapted() {
     
-    }
+   }
     
-    public Collection<OWLClassExpression[]> getNormalisedConceptInclusions(){ 
+   public Collection<OWLClassExpression[]> getNormalisedConceptInclusions(){
      return m_conceptInclusions;
-}
+   }
 
-    
+   public Collection<OWLObjectPropertyExpression[]> getNormalisedObjectPropertyInclusions(){
+     return m_simpleObjectPropertyInclusions;
+   }
+
 }

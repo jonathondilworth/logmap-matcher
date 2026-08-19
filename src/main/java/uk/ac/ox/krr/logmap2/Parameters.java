@@ -202,49 +202,31 @@ public class Parameters {
 
 
 	/**
+	 * Property domain/range compatibility mode: "strict" | "light" | "liberal"
+	 */
+	public static String property_compatibility = "light";
+
+
+	/**
 	 * cleanD_G (run Dowling-Gallier algorithm for incoherence/unsatisfiable-class checking)
-	 * setting to false turns the repair procedure off:
 	 * false => nothing is diagnosed via Horn-SAT => nothing is discarded or weakened by logical repair
 	 */
 	public static boolean cleanD_G = true;
 	public static boolean extractGlobal_D_G_Info = true;
 
 	/**
-	 * JD.
-	 * Repair aggressiveness dials
-	 * Defaults preserve LogMap's original behaviour
+	 * Liberal property compatibility: the different-but-non-conflicting verdict becomes
+	 * COMPATIBLE_RANGE_DOMAIN (0.90) instead of the de-facto fatal 1.5. Mutually
+	 * exclusive with strict_property_compatibility (the dispatch fail-louds if both set).
 	 */
+	public static boolean strict_property_compatibility = false;
+	public static boolean liberal_property_compatibility = false;
 
 	/**
-	 * strict_property_compatibility toggles the use of `arePropertiesCompatible` vs `arePropertiesCompatibleLight`
-	 * i.e., `strict_property_compatibility ? arePropertiesCompatible(...) : arePropertiesCompatibleLight(...)`
-	 * strict => a domain/range declared on one side but missing on the other -> incompatible -> unreachable required-confidence -> dropped
+	 * When `isMappingInConflictWithFixedMappings` is called, it calls either `direct_disjointness` or `includes_descendants` methods.
+	 * This boolean controls whether `includes_descendants` is used (true, default) or `direct_disjointness` is used (false, configurable).
+	 * Used during property-mapping (domain/range pairs) and instance-mapping assessment.
 	 */
-	// public static boolean strict_property_compatibility = false;
-
-	/**
-	 * Property domain/range compatibility mode: "strict" | "light" | "liberal"
-	 * strict adds the asymmetric-empty rule: a domain/range declared on one side but missing on the other -> incompatible -> unreachable required-confidence -> dropped
-	 * light provides the default configuration (described below)
-	 * liberal downgrades the 'different but-non-conflicting verdict from fatal to passable (0.90).
-	 * 
-	 * 
-	 */
-	// public static String property_compatibility = "light";
-	
-	/**
-	 * Property domain/range compatibility mode: "strict" | "light" | "liberal"
-	 */
-	public static String property_compatibility = "light";
-
-    /**
-     * setting to `false` relies on exact disjointness, i.e., walk up from both classes and check whether they land under opposite sides of a disjointness axiom.
-     * With setting to `true` (default), the test additionally walks the descendants of one class before applying the same check.
-     * This catches mappings whose acceptance would make a descendant class unsatisfiable.
-     * Used during property-mapping assessment (domain/range pairs), instance-mapping assessment (type pairs) and the second-chance re-admission filter.
-     * Note there is an even more aggressive variant, "arePartiallyDisjoint", which walks down from BOTH tested classes and tests the product space. 
-	 * It is commented out upstream ("too aggressive") and we do not include a dial for it.
-     */
 	public static boolean disjointness_includes_descendants = true;
 
 	/**
@@ -269,9 +251,16 @@ public class Parameters {
 	public static double hard_case_conflicts_factor = 1.0;
 	
 	/**
+	 *
+	 */
+	public static boolean harden_property_gate = false;
+
+	/**
 	 * JD. END OF DIALS.
 	 */
 	
+
+
 	
 
 	public static String path_chinese_segmenter_dict = "/home/ernesto/Documents/OAEI_2014_campaign/EVAL_2014/logmap2_package_oaei2014/conf/multilingual/dict_ictclas4j";
@@ -414,7 +403,9 @@ public class Parameters {
 	
 	private static final String translator_id_str = "translator_id";
 	
-	
+	private static final String strict_property_compatibility_str = "strict_property_compatibility";
+	private static final String liberal_property_compatibility_str = "liberal_property_compatibility";
+	private static final String harden_property_gate_str = "harden_property_gate";
 	
 	
 	
@@ -768,7 +759,15 @@ public class Parameters {
 					use_stemming = Boolean.valueOf(elements[1]);
 				}
 				
-				
+				else if (elements[0].equals(strict_property_compatibility_str)){
+					strict_property_compatibility = Boolean.valueOf(elements[1]);
+				}
+				else if (elements[0].equals(liberal_property_compatibility_str)){
+					liberal_property_compatibility = Boolean.valueOf(elements[1]);
+				}
+				else if (elements[0].equals(harden_property_gate_str)){
+					harden_property_gate = Boolean.valueOf(elements[1]);
+				}
 				
 				
 				
@@ -805,5 +804,20 @@ public class Parameters {
 		Parameters.restrict_instance_types = restrict_individual_types;
 	}
 	
+
+
+
+
+	public static void setStrictPropertyCompatibility(boolean strict_property_compatibility) {
+		Parameters.strict_property_compatibility = strict_property_compatibility;
+	}
+
+	public static void setLiberalPropertyCompatibility(boolean liberal_property_compatibility) {
+		Parameters.liberal_property_compatibility = liberal_property_compatibility;
+	}
+
+	public static void setHardenPropertyGate(boolean harden_property_gate) {
+		Parameters.harden_property_gate = harden_property_gate;
+	}
 	
 }

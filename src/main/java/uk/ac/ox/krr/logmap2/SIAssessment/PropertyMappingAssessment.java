@@ -115,13 +115,12 @@ public abstract class PropertyMappingAssessment<T> {
 		}
 	}
 	
-	
 	protected boolean haveSameRange(Set<T> range1, Set<T> range2){
 		
 		if (range1.size()>0 && range2.size()>0){			
 			return range1.equals(range2);
 		}
-		
+
 		return false;	
 	}
 	
@@ -131,7 +130,7 @@ public abstract class PropertyMappingAssessment<T> {
 		if (dom1.size()>0 || dom2.size()>0){			
 			return dom1.equals(dom2);
 		}
-		
+
 		return false;				
 		//return intersect.size()>0 && dom1.size()==intersect.size() && dom2.size()==intersect.size();
 	}
